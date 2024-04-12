@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<title>KWS Web App</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<script src="js/WebAudioRecorder.min.js"></script>
+
+
+<body>
+  <style>
+    #speechContainer {
+      display: none;
+    }
+
+    #submit {
+      margin-top: 2em;
+      margin-bottom: .2em;
+    }
+
+
+    #hd1 {
+      margin-top: 2em;
+      padding: 25px 11px;
+      background: #fcf0f7;
+      font-family: 'Noto Serif';
+      color: #e57667;
+      font-weight: bolder;
+      text-align: center;
+    }
+
+    #ft1 {
+      padding: 10px 10px;
+      margin-top: 5em;
+      margin-bottom: 1em;
+      background: #faf0e0;
+    }
+
+    div.scroll {
+      overflow-x: hidden;
+      overflow-y: auto;
+      text-align: justify;
+    }
+
+    #record {
+      margin-top: 1em;
+      margin-bottom: 1em;
+      display: flex;
+      height: fit-content;
+    }
+
+    #timer {
+      font-size: 1.2em;
+      font-weight: bold;
+      margin-left: 1em;
+      align-items: center;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Arial', sans-serif;
+    }
+
+    #loading-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background-color: #f0f0f0;
+      flex-direction: column;
+    }
+
+    #loading-spinner {
+      border: 8px solid #3498db;
+      border-top: 8px solid #ffffff;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 2s linear infinite;
+    }
+
+    #ld_text {
+      font-size: 1.5em;
+      font-weight: bold;
+      margin-top: 1em;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+
+    }
+  </style>
+
+  <div id="loading-container">
+    <div id="loading-spinner"></div>
+    <h2 id="ld_text" style="margin-left: 1em;"> Loading model...</h2>
+  </div>
+
+  <div id="speechContainer" class="container"
+    style="border-style: ridge;  border-width: 5px; margin-bottom: 0.5em; margin-top: 0.5em;">
+    <!-- Header -->
+    <header id="hd1" class="w3-container">
+      <h1 class="w3-margin w3-jumbo">Study of various end-to-end keyword spotting
+        systems Demo</h1>
+
+    </header>
+    <p style="margin-top: 2em; font-weight: bold; text-align: center; font-size: medium;">Enter/Record your audio below
+      and
+      click submit...</p>
+
+    <div>
+      <input id="fileInput" class='form-control' name="file" type="file" style="margin-top: 2em; height: auto;"
+        accept=".mp3,.wav,.flac" />
+
+      <div id="record" , class="form-control">
+        <button id="recordButton">Record</button>
+        <span id="timer">00:00</span>
+      </div>
+      <audio controls id="audioPlayer" class='form-control'></audio>
+      <button id="submit" type="button" class="btn btn-primary">Submit</button>
+      <h1 class="bg-success" id="speechText"></h1>
+
+    </div>
+
+    <script>
+      var urlParams = new URLSearchParams(window.location.search);
+      var model = urlParams.get('model');
+      var base64String = "";
+      const audioPlayer = document.getElementById('audioPlayer');
+
+
+      $(document).ready(function () {
+        var fileInput = document.getElementById('fileInput');
+        var reader = new FileReader();
+
+        fileInput.addEventListener('change', function () {
+          var file = fileInput.files[0];
+
+          if (file) {
+            reader.onload = function (e) {
+              base64String = e.target.result.split(',')[1]; // Extract the base64 string
+              // Set audio player source
+              audioPlayer.src = 'data:audio/wav;base64,' + base64String;
+            };
+            // Read the file as a data URL
+            reader.readAsDataURL(file);
+          }
+        });
+      });
+
+      document.addEventListener('DOMContentLoaded', function () {
+        const recordButton = document.getElementById('recordButton');
+        const timerElement = document.getElementById('timer');
+
+        var recorder;
+        let startTime;
+        var timerInterval;
+        const encodingType = 'mp3'; // 'wav', 'ogg', or 'mp3'
+
+        function startRecording() {
+          document.getElementById('fileInput').value = '';
+          const stream = navigator.mediaDevices.getUserMedia({ audio: true });
+
+          stream.then((stream) => {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            var input = audioContext.createMediaStreamSource(stream);
+
+            recorder = new WebAudioRecorder(input, {
+              workerDir: "js/", // must end with slash
+              encoding: encodingType,
+              sampleRate: 16000, // the sample rate of the PCM audio
+              numChannels: 2, //2 is the default, mp3 encoding supports only 2
+              onEncoderLoading: function (recorder, encoding) {
+                // show "loading encoder..." display
+                console.log("Loading " + encoding + " encoder...");
+              },
+              onEncoderLoaded: function (recorder, encoding) {
+                // hide "loading encoder..." display
+                console.log(encoding + " encoder loaded");
+              }
+            });
+
+            recorder.onComplete = function (recorder, blob) {
+              console.log("Encoding complete");
+              // Stop the stream
+              stream.getTracks()[0].stop();
+              // Stop the timer
+              clearInterval(timerInterval);
+              timerElement.textContent = '00:00';
+              create_b64(blob, encodingType);
+
+            };
+            recorder.setOptions({
+              timeLimit: 120,
+              encodeAfterRecord: true,
+              ogg: { quality: 0.5 },
+              mp3: { bitRate: 160 }
+            });
+
+            // Start the timer
+            startTime = new Date().getTime();
+            const timerInterval = setInterval(updateTimer, 1000);
+
+            function updateTimer() {
+              const currentTime = new Date().getTime();
+              const elapsedTime = new Date(currentTime - startTime);
+              const minutes = elapsedTime.getUTCMinutes().toString().padStart(2, '0');
+              const seconds = elapsedTime.getUTCSeconds().toString().padStart(2, '0');
+              timerElement.textContent = `${minutes}:${seconds}`;
+            }
+
+            recorder.startRecording();
+            recordButton.textContent = 'Stop Recording';
+            recordButton.onclick = stopRecording;
+          });
+        }
+
+        function stopRecording() {
+          recorder.finishRecording();
+          recordButton.textContent = 'Record';
+          recordButton.onclick = startRecording;
+        }
+
+        recordButton.onclick = startRecording;
+      });
+
+      function create_b64(blob, encodingType) {
+        const reader = new FileReader();
+        reader.onload = function () {
+          base64String = reader.result.split(',')[1]; // Extract base64 data
+          // Set audio player source
+          audioPlayer.src = 'data:audio/wav;base64,' + base64String;
+        };
+
+        reader.readAsDataURL(blob);
+      };
+
+      $("#submit").click(function () {
+
+        // Send the base64 string to your Flask API
+
+        if (base64String == "") {
+          alert("Please record or upload an audio file!");
+          return;
+        }
+
+        $.ajax({
+          type: "POST",
+          url: "https://2jbhk4h8ok.execute-api.ap-south-1.amazonaws.com/test",
+          contentType: "application/json", // Set the content type appropriately
+          data: JSON.stringify({ 'model': model, 'data': base64String }),
+
+          success: function (response) {
+            console.log(response);
+            $("#speechText").html(response);
+            base64String = "";
+          },
+          error: function (error) {
+            console.error(error);
+          }
+        });
+      });
+
+      async function fetchData() {
+        let data;
+
+        // Keep fetching data until the status_code is 200
+        do {
+          // console.log("Fetching data...");
+          const response = await fetch('https://2jbhk4h8ok.execute-api.ap-south-1.amazonaws.com/test?mdl=' + model);
+          const responseData = await response.json();
+          if (responseData['body'] != null) {
+            data = JSON.parse(responseData['body'])['status_code'];
+            // console.log(data);
+          }
+          else {
+            // Add a delay before the next fetch (adjust the delay as needed)
+            await new Promise(resolve => setTimeout(resolve, 20000));
+          }
+        } while (data !== 200)
+
+        // Once status_code is 200, hide loadingContainer and show speechContainer
+        document.getElementById('loading-container').style.display = 'none';
+        document.getElementById('speechContainer').style.display = 'block';
+      }
+
+      // Call the fetchData function
+      fetchData();
+
+    </script>
+
+    <footer id="ft1" class="w3-container">
+      <img style="height: 5em; width:5.6em; margin-right: 1em;" src="images/iiits.png">
+      <img style="height: 5em; width:5.6em;  margin-right: 1em; padding-left: 1em; border-left: 1px solid #ccc;"
+        src="images/dst_1.jpg">
+    
+      <img style="height: 5em; width:6em; padding-left: 1em; border-left: 1px solid #ccc;" src="images/dst.png">
+  </div>
+</body>
+
+</html>

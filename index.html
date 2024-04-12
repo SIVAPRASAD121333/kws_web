@@ -1,0 +1,168 @@
+<!DOCTYPE HTML>
+
+<html lang="en">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+<head>
+  <meta charset="utf-8">
+  <title>KWS</title>
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=PT+Sans+Narrow:regular,bold">
+  <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
+  <link rel="stylesheet" type="text/css" href="css/styles.css">
+</head>
+
+<body id="home">
+  <section class="main">
+    <div id="Title" class="wrapper topSection">
+      <div id="Header">
+        <div class="logo">
+          <h1><img id="logo" src="images/logo.png"></h1>
+          <h1>End-to-End Keyword Spotting Systems</h1>
+          <h2>on the Bengali language under low-resource condition</h2>
+        </div>
+      </div>
+      <div class="Border">
+        <a class="active" href="index.html">Home</a>
+        <a href="languages.html">Voice Acticity Detection</a>
+        <a href="team_members.html">Team Members</a>
+        <a href="contacts.html">Contacts</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="content">
+    <div class="container">
+      <div id="contents">
+        <h2 style="color:blue;"> 🙏 WELCOME 🙏</h2>
+        <h4 style="color:blue;">To</h4>
+        <h3 style="color:blue;">KWS ON THE BENGALI LANGUAGE UNDER LOW-RESOURCE CONDITION </h3>
+      </div>
+    </div>
+  </section>
+
+
+  <section class="features spacing">
+    <div class="container">
+      <h2>KWS Demo</h2>
+      <div class="row">
+        <div class="col-6 col-md-6">
+        <p> <h1>Preprocessing</h1> robust Voice Activity Detection (rVAD) is applied on the speech signal to discard the
+            low-energized portion of the signal (i.e. silence, noise/short pauses in a speech
+            signal). Afterward, the 1 second duration of the processed signal (zero padding
+            is done in case of a shorter length of signal) is used for the feature extraction.
+            Default parameters are considered as per rVAD.</p> 
+        </div>
+        <div class="col-6 col-md-6">
+         <p> <h1>Feature Extraction</h1>For feature extraction, 40 dimensional mel filter bank
+            energy is extracted with 30ms hamming window at 10 ms frame rate. It gives
+            around 100 frame per speech file. This feature is then fed to the DNN for the
+            classification of keywords or non-keywords. No zero mean and unit variance
+            normalization is applied to the extracted feature.</p> 
+        </div>
+        <!-- <div class="col-6 col-md-4">
+          <button class="btn" onclick="ln()">Santali</button>
+          <li>Santali-Austroasiatic language</li>
+          <li>Santali has 7.3 million native speakers </li>
+        </div> -->
+      <!--  voice output    
+        <title>Voice Input</title>
+      
+        <button id="startButton">Start Recording</button>
+        <div id="output"></div>
+      
+        <script src="script.js"></script> -->
+
+<!--  voice output --> 
+
+      <title>Voice Input Output</title> 
+
+
+<h1>Voice Input Output</h1>
+
+<button id="startRecording">Start Recording</button>
+<button id="stopRecording" style="display:none;">Stop Recording</button>
+<div id="output"></div>
+</div>
+
+<script>
+  const startRecordingButton = document.getElementById('startRecording');
+  const stopRecordingButton = document.getElementById('stopRecording');
+  const outputDiv = document.getElementById('output');
+
+  let recognition = new webkitSpeechRecognition();
+  recognition.continuous = true;
+  recognition.interimResults = true;
+  recognition.lang = 'en-US';
+
+  startRecordingButton.addEventListener('click', () => {
+    startRecordingButton.style.display = 'none';
+    stopRecordingButton.style.display = 'block';
+    recognition.start();
+  });
+
+  stopRecordingButton.addEventListener('click', () => {
+    startRecordingButton.style.display = 'block';
+    stopRecordingButton.style.display = 'none';
+    recognition.stop();
+  });
+
+  recognition.onresult = function(event) {
+    let interimTranscript = '';
+    let finalTranscript = '';
+    for (let i = event.resultIndex; i < event.results.length; ++i) {
+      if (event.results[i].isFinal) {
+        finalTranscript += event.results[i][0].transcript;
+      } else {
+        interimTranscript += event.results[i][0].transcript;
+      }
+    }
+    outputDiv.innerHTML = '<p><strong>Interim:</strong> ' + interimTranscript + '</p>' +
+                          '<p><strong>Final:</strong> ' + finalTranscript + '</p>';
+
+    //  Speak out the final transcript
+    if(finalTranscript.trim() !== '') {
+      let speech = new SpeechSynthesisUtterance(finalTranscript);
+      speechSynthesis.speak(speech);
+    }
+  };
+
+  recognition.onerror = function(event) {
+    console.error('Recognition error:', event.error);
+  };
+</script>
+<!--  voice output 
+
+        <title>Audio Transcription</title>
+        <script src="https://unpkg.com/wavesurfer.js"></script>
+     
+        <input type="file" id="audioFileInput">
+        <div id="waveform"></div>
+        <div id="transcriptionOutput"></div>
+      
+        <script src="script.js"></script>
+       
+--> 
+      </div>
+    </div>
+  </section>
+
+ 
+  <span class="footer">
+    
+
+    <p><a href="https://www.iiits.ac.in/" target="_blank"><img id="iiits" src="images/iiits.png"></a></p>
+        <p><a href="https://dst.gov.in/" target="_blank"><img id="dst" src="images/dst.png"></a></p>
+          <p><a href="https://dst.gov.in/" target="_blank"><img id="dst_1" src="images/dst_1.jpg"></a></p>
+  </span>
+
+  <!--Scripts-->
+  <script type="text/javascript" src="js/jquery-1.9.1.min.js"></script>
+  <script type="text/javascript" src="js/global.js"></script>
+  <script type="text/javascript" src="js/script.js"></script>
+
+</body>
+
+</html>
